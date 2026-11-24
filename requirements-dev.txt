@@ -1,0 +1,8 @@
+# For running/testing on a Mac or PC (the Pi uses apt packages via install.sh)
+numpy
+pillow
+flask
+pyyaml
+pytest
+# Optional, for real AI detection with your Mac webcam (--backend yolo-cpu):
+#   pip install ultralytics opencv-python

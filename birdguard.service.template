@@ -1,0 +1,17 @@
+[Unit]
+Description=BirdGuard bird deterrent
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__DIR__
+ExecStart=/usr/bin/python3 -m birdguard run --config __DIR__/config.yaml
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+SupplementaryGroups=audio video gpio
+
+[Install]
+WantedBy=multi-user.target

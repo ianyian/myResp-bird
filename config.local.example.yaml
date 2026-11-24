@@ -1,0 +1,23 @@
+# Your personal settings - overrides config.yaml, never committed to git.
+# Only list what you want to change. Edit on the Pi with:  nano config.local.yaml
+# then apply with:  sudo systemctl restart birdguard
+
+notify:
+  ntfy:
+    enabled: false
+    # Pick something long and random - anyone who knows it can read your alerts.
+    topic: birdguard-change-this-to-something-random-12345
+
+# Examples (remove the leading # to use):
+#
+# schedule:
+#   start: "07:00"
+#   end: "18:00"
+#
+# detector:
+#   score_threshold: 0.5   # raise if you get false alarms, lower if birds are missed
+#   vflip: true            # if the picture is upside down
+#
+# deterrents:
+#   sound:
+#     volume: 1.0

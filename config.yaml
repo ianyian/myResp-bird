@@ -1,0 +1,80 @@
+# BirdGuard settings.
+#
+# Don't edit this file for your own secrets/tweaks - copy the lines you want
+# to change into `config.local.yaml` (same folder). That file overrides this
+# one and is ignored by git, so `git pull` updates never conflict with it.
+
+detector:
+  # hailo     = Raspberry Pi camera + AI HAT+ (the real device)
+  # simulated = fake camera, birds appear when you press "Simulate bird"
+  #             (works on a Mac, no hardware needed)
+  # yolo-cpu  = Mac webcam + real AI detection on the CPU (optional, needs
+  #             `pip install ultralytics opencv-python`)
+  backend: hailo
+  model: auto                 # path to a .hef file, or "auto"
+  score_threshold: 0.45       # 0..1, how sure the AI must be that it's a bird
+  target_labels: [bird]       # COCO labels that count as a "bird"
+  camera_size: [1280, 960]
+  framerate: 15
+  hflip: false                # flip image if the camera is mounted sideways/upside down
+  vflip: false
+
+trigger:
+  # A bird must be seen in `confirm_frames` of the last `window_frames`
+  # frames before we react (filters out one-frame false alarms).
+  confirm_frames: 3
+  window_frames: 5
+  # Counted from the moment a sound STARTS. Nothing can re-trigger
+  # inside this window, so sounds never overlap.
+  cooldown_seconds: 30
+
+schedule:
+  enabled: true
+  start: "07:00"              # deterrent active from...
+  end: "18:00"                # ...until (outside this = quiet hours)
+
+deterrents:
+  sound:
+    enabled: true
+    duration_seconds: 10
+    volume: 0.9               # 0..1 (also turn the speaker itself up)
+    alsa_device: auto         # auto = first USB sound device found
+    sample_rate: 44100
+    use_generated: true       # built-in synthetic predator/alarm sounds
+    library_dir: sounds       # put extra .wav files here (optional)
+
+  # Example for future accessories (lights, sprinkler valve, ...) wired
+  # through a relay to a GPIO pin. Disabled by default.
+  gpio_output:
+    enabled: false
+    pin: 17
+    seconds: 10
+    active_high: true
+
+notify:
+  ntfy:
+    enabled: false
+    server: https://ntfy.sh
+    # Anyone who knows the topic name can read it - make it long and random.
+    # Put your real topic in config.local.yaml.
+    topic: change-me
+    min_interval_seconds: 300  # at most one phone alert every 5 minutes
+    attach_snapshot: true
+    notify_quiet_hours: false  # also alert for birds seen during quiet hours
+
+web:
+  enabled: true
+  host: 0.0.0.0
+  port: 8080
+  stream_width: 640           # smaller = less mobile data when viewing remotely
+  stream_fps: 5
+
+storage:
+  data_dir: data              # events log + snapshots
+  keep_events: 500            # older snapshots are deleted
+
+simulation:
+  # Only used by the "simulated" backend. 0 = birds only appear when you
+  # press the button; e.g. 45 = a bird shows up roughly every 45 seconds.
+  random_bird_every_seconds: 0
+  bird_visible_seconds: 3

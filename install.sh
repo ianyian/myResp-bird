@@ -15,6 +15,12 @@ sudo apt install -y --no-install-recommends \
   git alsa-utils python3-picamera2 python3-flask python3-yaml python3-numpy \
   python3-pil python3-gpiozero python3-pytest
 sudo apt install -y hailo-all
+# Bluetooth speaker support (optional - harmless if you use a USB speaker)
+if sudo apt install -y bluez bluez-alsa-utils; then
+  sudo systemctl enable --now bluealsa 2>/dev/null || true
+else
+  echo "    (Bluetooth audio package not available - USB speakers still work)"
+fi
 
 echo "==> 2/4 Creating your personal settings file"
 if [ ! -f "$DIR/config.local.yaml" ]; then

@@ -21,3 +21,5 @@ notify:
 # deterrents:
 #   sound:
 #     volume: 1.0
+#     bluetooth_mac: "AA:BB:CC:DD:EE:FF"   # Bluetooth speaker (docs/BLUETOOTH.md)
+#     bluetooth_keepalive_seconds: 240

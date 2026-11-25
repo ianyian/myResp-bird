@@ -4,7 +4,7 @@ import logging
 import time
 from pathlib import Path
 
-from ..audio import AudioPlayer
+from ..audio import player_from_config
 from ..sounds import SoundComposer, write_wav
 from .base import Deterrent
 
@@ -24,7 +24,7 @@ class SoundDeterrent(Deterrent):
             use_generated=bool(section.get("use_generated", True)),
             library_dir=cfg.path(lib) if lib else None,
         )
-        self.player = AudioPlayer(section.get("alsa_device", "auto"))
+        self.player = player_from_config(section)
         self.tmp_dir = cfg.path(cfg["storage"]["data_dir"]) / "tmp"
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
         log.info("sound output: %s", self.player.describe())

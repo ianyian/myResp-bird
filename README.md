@@ -15,7 +15,7 @@ phone anywhere, and it sends you alerts.
 | Live view, history with snapshots, test button and pause switch on your phone | web dashboard, port 8080 |
 | Phone push alerts (max 1 every 5 min) | ntfy |
 
-Guides: **[Testing](docs/TESTING.md)** · **[Hardware & mounting](docs/HARDWARE.md)**
+Guides: **[Testing](docs/TESTING.md)** · **[Hardware & mounting](docs/HARDWARE.md)** · **[Bluetooth speaker](docs/BLUETOOTH.md)**
 
 ---
 
@@ -75,7 +75,7 @@ See **[docs/HARDWARE.md](docs/HARDWARE.md)** for the full version (and which spe
 1. Stick the **Active Cooler** onto the Pi and plug its small fan cable into the **FAN** socket.
 2. Connect the **camera cable** to the Pi's **CAM/DISP 0** port (lift the latch, insert, press the latch down).
 3. Fit the **AI HAT+**: push the tall GPIO header onto the Pi's pins, attach the flat PCIe ribbon to the Pi's PCIe port, and screw the HAT down on the spacers. Feed the camera cable out past the HAT.
-4. Plug the **USB speaker** into a USB port.
+4. Plug the **USB speaker** into a USB port. Using a **Bluetooth speaker** instead? Pair it after installing, using [docs/BLUETOOTH.md](docs/BLUETOOTH.md).
 5. Put the SD card in after step 3 of the next section.
 
 ## 3. Prepare the SD card on your Mac
@@ -230,7 +230,8 @@ Run these on the Pi (after `ssh pi@birdguard.local`):
 
 | Problem | Fix |
 |---|---|
-| `check` says **speaker FAIL** | Plug the USB speaker in, then run `aplay -l` to see whether it's listed. Many cheap speakers only take *power* over USB and need a 3.5mm jack, which the Pi 5 doesn't have. See [HARDWARE.md](docs/HARDWARE.md). |
+| `check` says **speaker FAIL** (Bluetooth) | See [docs/BLUETOOTH.md](docs/BLUETOOTH.md#troubleshooting) |
+| `check` says **speaker FAIL** (USB) | Plug the USB speaker in, then run `aplay -l` to see whether it's listed. Many cheap speakers only take *power* over USB and need a 3.5mm jack, which the Pi 5 doesn't have. See [HARDWARE.md](docs/HARDWARE.md). |
 | Sound is too quiet | Turn the speaker's own knob up, run `alsamixer` (F6 to pick the USB card, arrow up for volume) and set `volume: 1.0` |
 | **camera FAIL** | Power off, reseat the ribbon cable at both ends (contacts facing the right way, latch closed) |
 | **AI HAT FAIL** | Reseat the PCIe ribbon, check `sudo apt install hailo-all`, then reboot |

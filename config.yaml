@@ -39,6 +39,12 @@ deterrents:
     duration_seconds: 10
     volume: 0.9               # 0..1 (also turn the speaker itself up)
     alsa_device: auto         # auto = first USB sound device found
+    # Bluetooth speaker instead of USB: put its address here (see docs/BLUETOOTH.md),
+    # e.g. "AA:BB:CC:DD:EE:FF". Leave empty for a USB speaker.
+    bluetooth_mac: ""
+    # Many cheap Bluetooth speakers switch off after a few silent minutes.
+    # If yours does, set e.g. 240 to play an inaudible tone every 4 minutes.
+    bluetooth_keepalive_seconds: 0
     sample_rate: 44100
     use_generated: true       # built-in synthetic predator/alarm sounds
     library_dir: sounds       # put extra .wav files here (optional)

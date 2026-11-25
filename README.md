@@ -23,7 +23,7 @@ Guides: **[Testing](docs/TESTING.md)** · **[Hardware & mounting](docs/HARDWARE.
 1. [Try it on your Mac first (no Pi needed)](#1-try-it-on-your-mac-first)
 2. [Assemble the hardware](#2-assemble-the-hardware)
 3. [Prepare the SD card on your Mac](#3-prepare-the-sd-card-on-your-mac)
-4. [First boot and connecting from your Mac](#4-first-boot-and-connecting-from-your-mac)
+4. [First boot and connecting from your Mac](#4-first-boot-and-connecting-from-your-mac) (+ [remote desktop](#4b-remote-desktop-optional-desktop-version-only))
 5. [Install BirdGuard on the Pi](#5-install-birdguard-on-the-pi)
 6. [Watch from your phone anywhere (Tailscale)](#6-watch-from-your-phone-anywhere-tailscale)
 7. [Phone alerts (ntfy)](#7-phone-alerts-ntfy)

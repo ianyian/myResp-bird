@@ -15,7 +15,20 @@ before every sound, and checks once a minute that it's still connected.
 - Make sure it isn't connected to your phone. Turn Bluetooth off on your
   phone while pairing.
 
-## 1. Pair it (one time only)
+## Desktop version: pair with the mouse (easiest)
+
+If you installed **Raspberry Pi OS with desktop**, open the remote desktop
+(README section 4b) and:
+
+1. Click the **Bluetooth icon** (top right) → **Add Device...**, select your speaker, then click **Pair**.
+2. **Right-click the speaker (volume) icon** and choose your Bluetooth speaker as the output.
+3. Note the speaker's address. In a terminal on the Pi, run `bluetoothctl devices`. It shows a line like `Device 41:42:3A:5C:7E:11 BT-SPEAKER`.
+4. Continue with **step 2** below, so BirdGuard reconnects the speaker if it drops.
+
+On the desktop version, BirdGuard plays through whichever output is selected in
+the volume icon, so a USB speaker works too: just select it there.
+
+## 1. Pair it with commands (Lite version, or if you prefer typing)
 
 On the Pi (`ssh pi@birdguard.local`), start the Bluetooth tool:
 
@@ -107,7 +120,8 @@ an AUX input for the long term (see [HARDWARE.md](HARDWARE.md)).
 | Problem | Fix |
 |---|---|
 | `check` says NOT connected | Make sure the speaker is on and in Bluetooth mode, and not connected to your phone. Then run `bluetoothctl connect <address>`. |
-| `aplay: ... bluealsa ... No such device` | The Bluetooth audio service isn't running. Run `sudo apt install -y bluez-alsa-utils`, then `sudo systemctl restart bluealsa`, then reboot. |
+| No sound on the desktop version | Right-click the volume icon and select the speaker as output. Then run `sudo systemctl restart birdguard`. |
+| `aplay: ... bluealsa ... No such device` (Lite version) | The Bluetooth audio service isn't running. Run `sudo apt install -y bluez-alsa-utils`, then `sudo systemctl restart bluealsa`, then reboot. |
 | It connects and then disconnects straight away | Remove the pairing and pair again: `bluetoothctl remove <address>`, then repeat step 1. |
 | Sound starts a second late | Normal for Bluetooth. Waking a sleeping speaker can take 2–5 seconds. |
 | Too quiet | Press the speaker's **+** button a few times. Its own volume is separate from BirdGuard's `volume`. |

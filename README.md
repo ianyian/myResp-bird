@@ -47,9 +47,7 @@ pip install -r requirements-dev.txt
 ```
 
 > If macOS asks to install "command line developer tools", click Install, then run the commands again.
-> The repo is private, so `git clone` asks you to log in. The easiest way is to install the GitHub CLI
-> (`brew install gh`, then `gh auth login`). Alternatively, on GitHub click **Code → Download ZIP**,
-> unzip it, and `cd` into the folder instead of cloning.
+
 
 Hear what the random sounds are like (it plays 3 different ones through your Mac speakers):
 
@@ -118,32 +116,24 @@ sudo apt update && sudo apt full-upgrade -y
 
 ## 5. Install BirdGuard on the Pi
 
-The repo is **private**, so the Pi needs permission to download it. We give
-it a read-only "deploy key". On the Pi:
+On the Pi, download the code and install it:
 
 ```bash
 sudo apt install -y git
 ```
 
 ```bash
-ssh-keygen -t ed25519 -C birdguard -f ~/.ssh/id_ed25519 -N ""
-```
-
-```bash
-cat ~/.ssh/id_ed25519.pub
-```
-
-Copy the line it prints (it starts with `ssh-ed25519`). On GitHub open the repo, go to **Settings → Deploy keys → Add deploy key**, give it a title (e.g. "birdguard pi"), paste the line, leave *Allow write access* **unticked**, and click **Add key**.
-
-Back on the Pi, download the code and install:
-
-```bash
-git clone git@github.com:ianyian/myResp-bird.git ~/myResp-bird
+git clone https://github.com/ianyian/myResp-bird.git ~/myResp-bird
 ```
 
 ```bash
 cd ~/myResp-bird && ./install.sh
 ```
+
+> If you ever make the repo private again, the Pi needs a read-only "deploy key":
+> run `ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""` and `cat ~/.ssh/id_ed25519.pub`,
+> add the printed line on GitHub under **Settings → Deploy keys**, then run
+> `git -C ~/myResp-bird remote set-url origin git@github.com:ianyian/myResp-bird.git`.
 
 The first time, it will tell you to reboot (to load the AI HAT driver):
 

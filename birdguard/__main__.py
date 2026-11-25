@@ -122,7 +122,8 @@ def cmd_check(args) -> int:
         report("speaker", good, f"Bluetooth {player.bluetooth.mac} " + (
             "connected" if good else "NOT connected - is it on, charged and in Bluetooth mode?"))
     else:
-        good = bool(player.command) and (platform.system() == "Darwin" or player.device is not None)
+        good = bool(player.command) and (
+            platform.system() == "Darwin" or player.command[0] == "pw-play" or player.device is not None)
         report("speaker", good, player.describe() + (
             "" if good else "  <- plug in a USB speaker, or set bluetooth_mac (docs/BLUETOOTH.md)"))
 

@@ -38,7 +38,10 @@ deterrents:
     enabled: true
     duration_seconds: 10
     volume: 0.9               # 0..1 (also turn the speaker itself up)
-    alsa_device: auto         # auto = first USB sound device found
+    # auto = PipeWire on Pi OS with desktop (plays on the output chosen in the
+    # volume icon), otherwise ALSA. Force with "pipewire" or "alsa".
+    output: auto
+    alsa_device: auto         # ALSA only: auto = first USB sound device found
     # Bluetooth speaker instead of USB: put its address here (see docs/BLUETOOTH.md),
     # e.g. "AA:BB:CC:DD:EE:FF". Leave empty for a USB speaker.
     bluetooth_mac: ""

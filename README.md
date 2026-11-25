@@ -82,7 +82,9 @@ See **[docs/HARDWARE.md](docs/HARDWARE.md)** for the full version (and which spe
 2. Install **Raspberry Pi Imager** from <https://www.raspberrypi.com/software/> and open it.
 3. Choose:
    - **Device:** Raspberry Pi 5
-   - **OS:** *Raspberry Pi OS (other)* → **Raspberry Pi OS Lite (64-bit)** (no desktop needed, it runs headless)
+   - **OS:** **Raspberry Pi OS (64-bit)**, the version with a desktop. You can then use the Pi's
+     desktop remotely from your Mac or phone (section 4b), which is handy for settings and Bluetooth.
+     *(Prefer no desktop? Choose Raspberry Pi OS (other) → Lite (64-bit). BirdGuard works on both.)*
    - **Storage:** your SD card
 4. When asked about **OS customisation**, click **Edit settings**:
    - **Hostname:** `birdguard`
@@ -113,6 +115,35 @@ Update the Pi once:
 ```bash
 sudo apt update && sudo apt full-upgrade -y
 ```
+
+## 4b. Remote desktop (optional, desktop version only)
+
+You don't need a screen, keyboard or mouse: you can see and use the Pi's desktop
+from your Mac or phone. Pick one:
+
+**Raspberry Pi Connect** (easiest, works from anywhere, free). On the Pi via SSH:
+
+```bash
+rpi-connect on
+```
+
+```bash
+rpi-connect signin
+```
+
+Open the link it prints, sign in or create a free Raspberry Pi ID, and give
+the device a name. Then go to <https://connect.raspberrypi.com> on your Mac or phone,
+open your Pi, and choose **Screen sharing**.
+
+**VNC** (home Wi-Fi, or anywhere through Tailscale). On the Pi:
+
+```bash
+sudo raspi-config nonint do_vnc 0
+```
+
+Install **RealVNC Viewer** on your Mac (free), connect to `birdguard.local`, and log in
+with your Pi username and password. If the screen looks tiny, set a bigger size with
+`sudo raspi-config` → *Display Options* → *VNC Resolution*, then reboot.
 
 ## 5. Install BirdGuard on the Pi
 

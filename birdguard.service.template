@@ -11,6 +11,7 @@ ExecStart=/usr/bin/python3 -m birdguard run --config __DIR__/config.yaml
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
+Environment=XDG_RUNTIME_DIR=/run/user/__UID__
 SupplementaryGroups=audio video gpio bluetooth
 
 [Install]

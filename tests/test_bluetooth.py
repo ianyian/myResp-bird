@@ -14,6 +14,7 @@ def linux_with_aplay(monkeypatch):
     monkeypatch.setattr(audio.platform, "system", lambda: "Linux")
     monkeypatch.setattr(audio.shutil, "which", lambda name: f"/usr/bin/{name}")
     monkeypatch.setattr(audio.AudioPlayer, "_watchdog", lambda self, k: None)
+    monkeypatch.setattr(audio, "pipewire_available", lambda: False)
 
 
 def test_bluetooth_device_string(linux_with_aplay):
@@ -70,3 +71,18 @@ def test_usb_is_default(linux_with_aplay, monkeypatch):
     monkeypatch.setattr(audio, "find_usb_alsa_device", lambda: "plughw:CARD=Speaker,DEV=0")
     p = audio.player_from_config({})
     assert p.bluetooth is None and p.device == "plughw:CARD=Speaker,DEV=0"
+
+
+def test_desktop_uses_pipewire(linux_with_aplay, monkeypatch):
+    monkeypatch.setattr(audio, "pipewire_available", lambda: True)
+    p = audio.player_from_config({"bluetooth_mac": "AA:BB:CC:DD:EE:FF"})
+    assert p.command == ["pw-play"]          # plays on the desktop's chosen output
+    assert p.bluetooth is not None           # still reconnects the speaker
+
+
+def test_lite_uses_alsa(linux_with_aplay, monkeypatch):
+    monkeypatch.setattr(audio, "pipewire_available", lambda: False)
+    monkeypatch.setattr(audio, "find_usb_alsa_device", lambda: None)
+    assert audio.player_from_config({}).command == ["aplay", "-q"]
+    forced = audio.player_from_config({"output": "pipewire"})
+    assert forced.command == ["pw-play"]

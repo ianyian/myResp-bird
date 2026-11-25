@@ -1,7 +1,9 @@
 """Play a .wav file without blocking.
 
-- Raspberry Pi, USB speaker:       aplay -D plughw:CARD=...
-- Raspberry Pi, Bluetooth speaker: aplay -D bluealsa:DEV=<MAC>,PROFILE=a2dp
+- Pi OS with desktop (PipeWire):   pw-play -> the speaker chosen as output
+                                    (USB or Bluetooth, pick it in the desktop's volume icon)
+- Pi OS Lite, USB speaker:         aplay -D plughw:CARD=...
+- Pi OS Lite, Bluetooth speaker:   aplay -D bluealsa:DEV=<MAC>,PROFILE=a2dp
   (needs the bluez-alsa package, installed by install.sh)
 - Mac:                             afplay
 """
@@ -9,6 +11,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import platform
 import re
 import shutil
@@ -42,6 +45,14 @@ def list_alsa_devices() -> list[dict]:
                 "device": int(m.group(4)), "desc": m.group(5),
             })
     return devices
+
+
+def pipewire_available() -> bool:
+    """True on Raspberry Pi OS with desktop, where PipeWire owns the audio."""
+    if not shutil.which("pw-play"):
+        return False
+    runtime = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+    return Path(runtime, "pipewire-0").exists()
 
 
 def find_usb_alsa_device() -> str | None:
@@ -89,7 +100,13 @@ class Bluetooth:
 
 
 class AudioPlayer:
-    def __init__(self, alsa_device: str = "auto", bluetooth_mac: str = "", keepalive_seconds: float = 0):
+    def __init__(
+        self,
+        alsa_device: str = "auto",
+        bluetooth_mac: str = "",
+        keepalive_seconds: float = 0,
+        output: str = "auto",
+    ):
         self._proc: subprocess.Popen | None = None
         self._pending = False
         self._lock = threading.Lock()
@@ -97,11 +114,16 @@ class AudioPlayer:
         self.device: str | None = None
         self.bluetooth: Bluetooth | None = None
 
+        if bluetooth_mac:
+            self.bluetooth = Bluetooth(bluetooth_mac)
+        use_pipewire = output == "pipewire" or (output == "auto" and self.system == "Linux" and pipewire_available())
+
         if self.system == "Darwin" and shutil.which("afplay"):
             self.command = ["afplay"]
+        elif use_pipewire:
+            self.command = ["pw-play"]
         elif shutil.which("aplay"):
-            if bluetooth_mac:
-                self.bluetooth = Bluetooth(bluetooth_mac)
+            if self.bluetooth:
                 self.device = f"bluealsa:DEV={self.bluetooth.mac},PROFILE=a2dp"
             elif alsa_device == "auto":
                 self.device = find_usb_alsa_device()
@@ -114,12 +136,14 @@ class AudioPlayer:
             self.command = []
             log.warning("no audio player found (aplay/afplay) - sounds will be silent")
 
-        if self.bluetooth:
+        if self.bluetooth and self.command:
             threading.Thread(target=self._watchdog, args=(keepalive_seconds,), daemon=True).start()
 
     def describe(self) -> str:
         if not self.command:
             return "none (silent)"
+        if self.command[0] == "pw-play":
+            return "pw-play (desktop audio: the output selected in the volume icon)"
         return " ".join(self.command)
 
     # ------------------------------------------------------------ playback
@@ -191,14 +215,15 @@ class AudioPlayer:
                 self._keepalive()
 
     def _keepalive(self) -> None:
+        from .sounds import write_wav  # local import: sounds imports numpy-heavy code
+
         sr = 44100
         t = np.arange(int(1.0 * sr)) / sr
-        tone = (np.sin(2 * np.pi * 40 * t) * 0.004 * 32767).astype("<i2")  # very quiet 40 Hz
+        tone = (np.sin(2 * np.pi * 40 * t) * 0.004).astype(np.float32)  # very quiet 40 Hz
+        wav = Path("/tmp") / f"birdguard-keepalive-{os.getuid()}.wav"
         try:
-            subprocess.run(
-                self.command + ["-t", "raw", "-f", "S16_LE", "-c", "1", "-r", str(sr)],
-                input=tone.tobytes(), timeout=10, capture_output=True,
-            )
+            write_wav(wav, tone, sr)
+            subprocess.run(self.command + [str(wav)], timeout=10, capture_output=True)
         except Exception as exc:
             log.debug("keep-alive failed: %s", exc)
 
@@ -208,4 +233,5 @@ def player_from_config(section: dict) -> AudioPlayer:
         alsa_device=section.get("alsa_device", "auto"),
         bluetooth_mac=str(section.get("bluetooth_mac") or "").strip(),
         keepalive_seconds=float(section.get("bluetooth_keepalive_seconds") or 0),
+        output=str(section.get("output", "auto")),
     )

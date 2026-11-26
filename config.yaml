@@ -73,7 +73,7 @@ notify:
 
 web:
   enabled: true
-  host: 0.0.0.0
+  host: auto                  # auto = all IPv4 + IPv6 addresses
   port: 8080
   stream_width: 640           # smaller = less mobile data when viewing remotely
   stream_fps: 5

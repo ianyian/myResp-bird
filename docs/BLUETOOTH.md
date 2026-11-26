@@ -30,7 +30,7 @@ the volume icon, so a USB speaker works too: just select it there.
 
 ## 1. Pair it with commands (Lite version, or if you prefer typing)
 
-On the Pi (`ssh pi@birdguard.local`), start the Bluetooth tool:
+On the Pi (`ssh admin@birdguard.local`), start the Bluetooth tool:
 
 ```bash
 bluetoothctl
@@ -65,7 +65,7 @@ The speaker usually beeps or says "connected".
 ## 2. Tell BirdGuard to use it
 
 ```bash
-nano ~/myResp-bird/config.local.yaml
+nano ~/myresp-bird/config.local.yaml
 ```
 
 Add these lines, using your speaker's address. Indent with spaces, not tabs:
@@ -87,7 +87,7 @@ sudo systemctl stop birdguard
 ```
 
 ```bash
-cd ~/myResp-bird && python3 -m birdguard check
+cd ~/myresp-bird && python3 -m birdguard check
 ```
 
 ```bash

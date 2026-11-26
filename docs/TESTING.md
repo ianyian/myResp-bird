@@ -74,7 +74,7 @@ run again.
 
 1. Run `python3 -m birdguard check`. All items should show `[OK ]`.
 2. Press **Test sound** on the dashboard. You should hear 10s of sound from the USB speaker.
-3. **Fake bird:** play a bird video full-screen on your phone or a tablet (search YouTube for "pigeon close up" or "birds for cats to watch") and hold it 0.5–1m in front of the camera. You should see a red `bird 80%` box on the live view, then hear the sound.
+3. **Fake bird:** print [test-birds/birdguard-test-birds.pdf](test-birds/birdguard-test-birds.pdf) (7 real bird photos, each checked with YOLOv8s) and hold a page 0.5–1.5 m from the camera. Or play a bird video full-screen on your phone or a tablet (search YouTube for "pigeon close up" or "birds for cats to watch") and hold it 0.5–1m in front of the camera. You should see a red `bird 80%` box on the live view, then hear the sound.
 4. To test outside 07:00–18:00, run it by hand with the schedule ignored:
 
 ```bash
@@ -82,7 +82,7 @@ sudo systemctl stop birdguard
 ```
 
 ```bash
-cd ~/myResp-bird && python3 -m birdguard run --ignore-schedule
+cd ~/myresp-bird && python3 -m birdguard run --ignore-schedule
 ```
 
    Press Ctrl+C when done, then:

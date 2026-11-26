@@ -191,3 +191,9 @@ def test_web_api(make_guard):
     assert client.post("/api/test-sound").get_json()["ok"] is True
     assert client.post("/api/enable", json={"enabled": False}).get_json()["enabled"] is False
     assert len(client.get("/api/events").get_json()) == 1
+
+
+def test_dashboard_listen_host():
+    from birdguard.__main__ import listen_host
+    assert listen_host("192.168.1.5") == "192.168.1.5"   # explicit setting kept
+    assert listen_host("auto") in ("::", "0.0.0.0")      # dual stack when available

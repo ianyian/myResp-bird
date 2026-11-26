@@ -12,6 +12,7 @@ import argparse
 import logging
 import platform
 import signal
+import socket
 import sys
 import threading
 from pathlib import Path
@@ -20,6 +21,28 @@ from .config import load_config
 
 DEFAULT_CONFIG = Path(__file__).resolve().parent.parent / "config.yaml"
 log = logging.getLogger("birdguard")
+
+
+def listen_host(host: str) -> str:
+    """Listen on IPv4 *and* IPv6 when possible.
+
+    Macs and PCs often reach `birdguard.local` over IPv6; a server bound to
+    0.0.0.0 (IPv4 only) then shows "refused to connect".
+    """
+    if host not in ("0.0.0.0", "auto", ""):
+        return host
+    if not socket.has_ipv6:
+        return "0.0.0.0"
+    try:
+        s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        try:
+            s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+            s.bind(("::", 0))
+        finally:
+            s.close()
+        return "::"  # dual stack: accepts IPv4 and IPv6
+    except OSError:
+        return "0.0.0.0"
 
 
 def cmd_run(args) -> int:
@@ -47,7 +70,7 @@ def cmd_run(args) -> int:
         app = create_app(guard)
         port = int(args.port or web.get("port", 8080))
         threading.Thread(
-            target=lambda: app.run(host=web.get("host", "0.0.0.0"), port=port, threaded=True),
+            target=lambda: app.run(host=listen_host(str(web.get("host", "auto"))), port=port, threaded=True),
             daemon=True,
         ).start()
         log.info("dashboard: http://%s:%d", "localhost" if platform.system() == "Darwin" else platform.node(), port)

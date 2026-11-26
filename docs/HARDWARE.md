@@ -11,7 +11,11 @@
 | 27W USB-C power supply | Use this one. Phone chargers often can't supply enough power. |
 | microSD card + USB reader | For the operating system |
 
-## The speaker (still needed)
+## The speaker
+
+> **Already have a Bluetooth speaker?** That works too. See **[BLUETOOTH.md](BLUETOOTH.md)**.
+> It's fine for testing. For a device that runs unattended, a wired USB speaker is more
+> reliable, because cheap Bluetooth speakers can switch themselves off or drop the connection.
 
 ⚠️ **The Pi 5 has no headphone jack.** Many cheap "USB speakers" only use
 USB for *power* and send the sound through a 3.5mm cable. Those **won't work**

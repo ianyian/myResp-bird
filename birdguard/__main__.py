@@ -88,12 +88,13 @@ def cmd_sound_test(args) -> int:
         else:
             import tempfile
             import time
-            from .audio import AudioPlayer
-            player = AudioPlayer(s.get("alsa_device", "auto"))
+            from .audio import player_from_config
+            player = player_from_config(s)
             print(f"  playing via: {player.describe()}")
             with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
                 write_wav(Path(tmp.name), samples, composer.sr)
                 player.play(Path(tmp.name))
+                time.sleep(0.2)
                 while player.is_playing():
                     time.sleep(0.2)
                 player.stop()
@@ -111,13 +112,20 @@ def cmd_check(args) -> int:
 
     report("python", sys.version_info >= (3, 9), sys.version.split()[0])
 
-    from .audio import AudioPlayer, list_alsa_devices
+    from .audio import list_alsa_devices, player_from_config
     devices = list_alsa_devices()
     for d in devices:
         print(f"       sound device: card {d['card']} '{d['name']}' ({d['id']})")
-    player = AudioPlayer(cfg["deterrents"]["sound"].get("alsa_device", "auto"))
-    good = bool(player.command) and (platform.system() == "Darwin" or player.device is not None)
-    report("speaker", good, player.describe() + ("" if good else "  <- plug in a USB speaker"))
+    player = player_from_config(cfg["deterrents"]["sound"])
+    if player.bluetooth:
+        good = player.bluetooth.ensure_connected()
+        report("speaker", good, f"Bluetooth {player.bluetooth.mac} " + (
+            "connected" if good else "NOT connected - is it on, charged and in Bluetooth mode?"))
+    else:
+        good = bool(player.command) and (
+            platform.system() == "Darwin" or player.command[0] == "pw-play" or player.device is not None)
+        report("speaker", good, player.describe() + (
+            "" if good else "  <- plug in a USB speaker, or set bluetooth_mac (docs/BLUETOOTH.md)"))
 
     if cfg["detector"]["backend"] == "hailo":
         try:

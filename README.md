@@ -15,7 +15,7 @@ phone anywhere, and it sends you alerts.
 | Live view, history with snapshots, test button and pause switch on your phone | web dashboard, port 8080 |
 | Phone push alerts (max 1 every 5 min) | ntfy |
 
-Guides: **[Testing](docs/TESTING.md)** · **[Hardware & mounting](docs/HARDWARE.md)**
+Guides: **[Testing](docs/TESTING.md)** · **[Hardware & mounting](docs/HARDWARE.md)** · **[Bluetooth speaker](docs/BLUETOOTH.md)**
 
 ---
 
@@ -23,7 +23,7 @@ Guides: **[Testing](docs/TESTING.md)** · **[Hardware & mounting](docs/HARDWARE.
 1. [Try it on your Mac first (no Pi needed)](#1-try-it-on-your-mac-first)
 2. [Assemble the hardware](#2-assemble-the-hardware)
 3. [Prepare the SD card on your Mac](#3-prepare-the-sd-card-on-your-mac)
-4. [First boot and connecting from your Mac](#4-first-boot-and-connecting-from-your-mac)
+4. [First boot and connecting from your Mac](#4-first-boot-and-connecting-from-your-mac) (+ [remote desktop](#4b-remote-desktop-optional-desktop-version-only))
 5. [Install BirdGuard on the Pi](#5-install-birdguard-on-the-pi)
 6. [Watch from your phone anywhere (Tailscale)](#6-watch-from-your-phone-anywhere-tailscale)
 7. [Phone alerts (ntfy)](#7-phone-alerts-ntfy)
@@ -47,9 +47,7 @@ pip install -r requirements-dev.txt
 ```
 
 > If macOS asks to install "command line developer tools", click Install, then run the commands again.
-> The repo is private, so `git clone` asks you to log in. The easiest way is to install the GitHub CLI
-> (`brew install gh`, then `gh auth login`). Alternatively, on GitHub click **Code → Download ZIP**,
-> unzip it, and `cd` into the folder instead of cloning.
+
 
 Hear what the random sounds are like (it plays 3 different ones through your Mac speakers):
 
@@ -75,7 +73,7 @@ See **[docs/HARDWARE.md](docs/HARDWARE.md)** for the full version (and which spe
 1. Stick the **Active Cooler** onto the Pi and plug its small fan cable into the **FAN** socket.
 2. Connect the **camera cable** to the Pi's **CAM/DISP 0** port (lift the latch, insert, press the latch down).
 3. Fit the **AI HAT+**: push the tall GPIO header onto the Pi's pins, attach the flat PCIe ribbon to the Pi's PCIe port, and screw the HAT down on the spacers. Feed the camera cable out past the HAT.
-4. Plug the **USB speaker** into a USB port.
+4. Plug the **USB speaker** into a USB port. Using a **Bluetooth speaker** instead? Pair it after installing, using [docs/BLUETOOTH.md](docs/BLUETOOTH.md).
 5. Put the SD card in after step 3 of the next section.
 
 ## 3. Prepare the SD card on your Mac
@@ -84,7 +82,9 @@ See **[docs/HARDWARE.md](docs/HARDWARE.md)** for the full version (and which spe
 2. Install **Raspberry Pi Imager** from <https://www.raspberrypi.com/software/> and open it.
 3. Choose:
    - **Device:** Raspberry Pi 5
-   - **OS:** *Raspberry Pi OS (other)* → **Raspberry Pi OS Lite (64-bit)** (no desktop needed, it runs headless)
+   - **OS:** **Raspberry Pi OS (64-bit)**, the version with a desktop. You can then use the Pi's
+     desktop remotely from your Mac or phone (section 4b), which is handy for settings and Bluetooth.
+     *(Prefer no desktop? Choose Raspberry Pi OS (other) → Lite (64-bit). BirdGuard works on both.)*
    - **Storage:** your SD card
 4. When asked about **OS customisation**, click **Edit settings**:
    - **Hostname:** `birdguard`
@@ -116,34 +116,55 @@ Update the Pi once:
 sudo apt update && sudo apt full-upgrade -y
 ```
 
+## 4b. Remote desktop (optional, desktop version only)
+
+You don't need a screen, keyboard or mouse: you can see and use the Pi's desktop
+from your Mac or phone. Pick one:
+
+**Raspberry Pi Connect** (easiest, works from anywhere, free). On the Pi via SSH:
+
+```bash
+rpi-connect on
+```
+
+```bash
+rpi-connect signin
+```
+
+Open the link it prints, sign in or create a free Raspberry Pi ID, and give
+the device a name. Then go to <https://connect.raspberrypi.com> on your Mac or phone,
+open your Pi, and choose **Screen sharing**.
+
+**VNC** (home Wi-Fi, or anywhere through Tailscale). On the Pi:
+
+```bash
+sudo raspi-config nonint do_vnc 0
+```
+
+Install **RealVNC Viewer** on your Mac (free), connect to `birdguard.local`, and log in
+with your Pi username and password. If the screen looks tiny, set a bigger size with
+`sudo raspi-config` → *Display Options* → *VNC Resolution*, then reboot.
+
 ## 5. Install BirdGuard on the Pi
 
-The repo is **private**, so the Pi needs permission to download it. We give
-it a read-only "deploy key". On the Pi:
+On the Pi, download the code and install it:
 
 ```bash
 sudo apt install -y git
 ```
 
 ```bash
-ssh-keygen -t ed25519 -C birdguard -f ~/.ssh/id_ed25519 -N ""
-```
-
-```bash
-cat ~/.ssh/id_ed25519.pub
-```
-
-Copy the line it prints (it starts with `ssh-ed25519`). On GitHub open the repo, go to **Settings → Deploy keys → Add deploy key**, give it a title (e.g. "birdguard pi"), paste the line, leave *Allow write access* **unticked**, and click **Add key**.
-
-Back on the Pi, download the code and install:
-
-```bash
-git clone git@github.com:ianyian/myResp-bird.git ~/myResp-bird
+git clone https://github.com/ianyian/myResp-bird.git ~/myResp-bird
 ```
 
 ```bash
 cd ~/myResp-bird && ./install.sh
 ```
+
+> If you ever make the repo private again, the Pi needs a read-only "deploy key":
+> run `ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""` and `cat ~/.ssh/id_ed25519.pub`,
+> add the printed line on GitHub under **Settings → Deploy keys**, then run
+> `git -C ~/myResp-bird remote set-url origin git@github.com:ianyian/myResp-bird.git`.
 
 The first time, it will tell you to reboot (to load the AI HAT driver):
 
@@ -230,7 +251,8 @@ Run these on the Pi (after `ssh pi@birdguard.local`):
 
 | Problem | Fix |
 |---|---|
-| `check` says **speaker FAIL** | Plug the USB speaker in, then run `aplay -l` to see whether it's listed. Many cheap speakers only take *power* over USB and need a 3.5mm jack, which the Pi 5 doesn't have. See [HARDWARE.md](docs/HARDWARE.md). |
+| `check` says **speaker FAIL** (Bluetooth) | See [docs/BLUETOOTH.md](docs/BLUETOOTH.md#troubleshooting) |
+| `check` says **speaker FAIL** (USB) | Plug the USB speaker in, then run `aplay -l` to see whether it's listed. Many cheap speakers only take *power* over USB and need a 3.5mm jack, which the Pi 5 doesn't have. See [HARDWARE.md](docs/HARDWARE.md). |
 | Sound is too quiet | Turn the speaker's own knob up, run `alsamixer` (F6 to pick the USB card, arrow up for volume) and set `volume: 1.0` |
 | **camera FAIL** | Power off, reseat the ribbon cable at both ends (contacts facing the right way, latch closed) |
 | **AI HAT FAIL** | Reseat the PCIe ribbon, check `sudo apt install hailo-all`, then reboot |

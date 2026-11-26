@@ -58,7 +58,14 @@ def cmd_run(args) -> int:
     from .detectors import build_detector
     from .notify import NtfyNotifier
 
-    detector = build_detector(cfg)
+    try:
+        detector = build_detector(cfg)
+    except Exception as exc:
+        # Keep running so the dashboard still opens and shows the problem;
+        # retry opening the camera / AI HAT in the background.
+        from .detectors.unavailable import UnavailableDetector, describe_error
+        log.exception("could not open the camera / AI HAT - will keep retrying")
+        detector = UnavailableDetector(describe_error(exc), lambda: build_detector(cfg))
     deterrents = build_deterrents(cfg)
     notifier = NtfyNotifier(cfg.get("notify", {}).get("ntfy", {}))
     guard = BirdGuard(cfg, detector, deterrents, notifier)
@@ -124,6 +131,24 @@ def cmd_sound_test(args) -> int:
     return 0
 
 
+def hailo_hint() -> str:
+    """Explain why /dev/hailo0 is missing."""
+    import subprocess
+    try:
+        pci = subprocess.run(["lspci"], capture_output=True, text=True, timeout=5).stdout
+    except Exception:
+        pci = ""
+    if "Hailo" not in pci:
+        return ("/dev/hailo0 missing and no Hailo device on PCIe - power off, reseat the AI HAT "
+                "and its flat ribbon cable, then power on")
+    kernel = platform.release()
+    return (f"AI HAT is connected but its driver isn't loaded for kernel {kernel} "
+            "(usually after a system update). Fix:\n"
+            "         sudo apt install -y dkms linux-headers-rpi-2712\n"
+            "         sudo apt install --reinstall -y hailort-pcie-driver\n"
+            "         sudo modprobe hailo_pci")
+
+
 def cmd_check(args) -> int:
     cfg = load_config(args.config)
     ok = True
@@ -164,8 +189,10 @@ def cmd_check(args) -> int:
         except Exception as exc:
             report("camera", False, f"picamera2 not available: {exc}")
         hailo_dev = Path("/dev/hailo0").exists()
-        report("AI HAT", hailo_dev, "/dev/hailo0 present" if hailo_dev else
-               "/dev/hailo0 missing - is the AI HAT fitted and hailo-all installed? (then reboot)")
+        if hailo_dev:
+            report("AI HAT", True, "/dev/hailo0 present")
+        else:
+            report("AI HAT", False, hailo_hint())
 
     from .notify import NtfyNotifier
     n = NtfyNotifier(cfg.get("notify", {}).get("ntfy", {}))

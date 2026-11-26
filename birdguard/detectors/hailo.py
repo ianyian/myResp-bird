@@ -37,8 +37,6 @@ def find_model(setting: str) -> str:
 
 class HailoDetector(Detector):
     def __init__(self, cfg):
-        from libcamera import Transform
-        from picamera2 import Picamera2
         from picamera2.devices import Hailo
 
         d = cfg["detector"]
@@ -46,6 +44,23 @@ class HailoDetector(Detector):
         log.info("loading AI model %s", self.model_path)
         self.hailo = Hailo(self.model_path)
         model_h, model_w, _ = self.hailo.get_input_shape()
+
+        try:
+            self._open_camera(d, model_w, model_h)
+        except Exception:
+            # release the camera and AI HAT so a retry can open them again
+            if getattr(self, "picam2", None) is not None:
+                try:
+                    self.picam2.close()
+                except Exception:
+                    pass
+            self.hailo.close()
+            raise
+        self.threshold = float(d.get("score_threshold", 0.45))
+
+    def _open_camera(self, d: dict, model_w: int, model_h: int) -> None:
+        from libcamera import Transform
+        from picamera2 import Picamera2
 
         w, h = d.get("camera_size", [1280, 960])
         self.picam2 = Picamera2()
@@ -63,7 +78,6 @@ class HailoDetector(Detector):
             self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
         except Exception:
             pass
-        self.threshold = float(d.get("score_threshold", 0.45))
 
     def read(self) -> tuple[np.ndarray, list[Detection]]:
         request = self.picam2.capture_request()

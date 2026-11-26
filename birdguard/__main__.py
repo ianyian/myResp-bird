@@ -179,32 +179,48 @@ def cmd_check(args) -> int:
     return 0 if ok else 1
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="birdguard", description="Detect birds and scare them away.")
-    parser.add_argument("--config", default=str(DEFAULT_CONFIG), help="path to config.yaml")
-    parser.add_argument("-v", "--verbose", action="store_true")
+def build_parser() -> argparse.ArgumentParser:
+    # --config / -v work both before and after the command
+    # (e.g. "birdguard --config x run" and "birdguard run --config x").
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--config", default=argparse.SUPPRESS, help="path to config.yaml")
+    common.add_argument("-v", "--verbose", action="store_true", default=argparse.SUPPRESS)
+
+    parser = argparse.ArgumentParser(
+        prog="birdguard", description="Detect birds and scare them away.", parents=[common])
     sub = parser.add_subparsers(dest="command")
 
-    run = sub.add_parser("run", help="start BirdGuard (default)")
+    run = sub.add_parser("run", parents=[common], help="start BirdGuard (default)")
     run.add_argument("--simulate", action="store_true", help="fake camera, no hardware needed")
     run.add_argument("--backend", choices=["hailo", "simulated", "yolo-cpu"])
     run.add_argument("--ignore-schedule", action="store_true", help="ignore quiet hours (for testing)")
     run.add_argument("--no-web", action="store_true", help="don't start the dashboard")
     run.add_argument("--port", type=int)
 
-    st = sub.add_parser("sound-test", help="play (or save) a random deterrent sound")
+    st = sub.add_parser("sound-test", parents=[common], help="play (or save) a random deterrent sound")
     st.add_argument("--save", help="write to this .wav file instead of playing")
     st.add_argument("--count", type=int, default=1)
 
-    sub.add_parser("check", help="check camera, AI HAT, speaker and ntfy")
+    sub.add_parser("check", parents=[common], help="check camera, AI HAT, speaker and ntfy")
+    return parser
 
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = build_parser()
     args = parser.parse_args(argv)
+    if args.command is None:  # no command given = "run"
+        args = parser.parse_args(argv + ["run"])
+    args.config = getattr(args, "config", str(DEFAULT_CONFIG))
+    args.verbose = getattr(args, "verbose", False)
+    return args
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(sys.argv[1:] if argv is None else list(argv))
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%H:%M:%S",
     )
-    if args.command is None:
-        args = parser.parse_args((sys.argv[1:] if argv is None else argv) + ["run"])
     return {"run": cmd_run, "sound-test": cmd_sound_test, "check": cmd_check}[args.command](args)
 
 

@@ -189,5 +189,5 @@ class BirdGuard:
             "can_simulate": self.detector.can_simulate,
             "deterrents": [d.name for d in self.deterrents],
             "notifications": self.notifier.enabled,
-            "last_error": self.last_error,
+            "last_error": getattr(self.detector, "error", "") or self.last_error,
         }

@@ -255,7 +255,8 @@ Run these on the Pi (after `ssh pi@birdguard.local`):
 | `check` says **speaker FAIL** (USB) | Plug the USB speaker in, then run `aplay -l` to see whether it's listed. Many cheap speakers only take *power* over USB and need a 3.5mm jack, which the Pi 5 doesn't have. See [HARDWARE.md](docs/HARDWARE.md). |
 | Sound is too quiet | Turn the speaker's own knob up, run `alsamixer` (F6 to pick the USB card, arrow up for volume) and set `volume: 1.0` |
 | **camera FAIL** | Power off, reseat the ribbon cable at both ends (contacts facing the right way, latch closed) |
-| **AI HAT FAIL** | Reseat the PCIe ribbon, check `sudo apt install hailo-all`, then reboot |
+| **AI HAT FAIL**, and `lspci` shows no Hailo device | Power off, reseat the AI HAT and its flat PCIe ribbon cable at both ends, then power on |
+| **AI HAT FAIL** / `HAILO_OUT_OF_PHYSICAL_DEVICES`, but `lspci` lists "Hailo-8" | The driver wasn't rebuilt after a kernel update. Run `sudo apt install -y dkms linux-headers-rpi-2712`, then `sudo apt install --reinstall -y hailort-pcie-driver`, then `sudo modprobe hailo_pci`, then `sudo systemctl restart birdguard`. Once DKMS is installed, future kernel updates rebuild the driver automatically. |
 | Picture upside down | Set `detector: vflip: true` and `hflip: true` in `config.local.yaml` |
 | False alarms (leaves, etc.) | Raise `score_threshold` to 0.55–0.6 or `confirm_frames` to 4 |
 | Birds missed | Lower `score_threshold` to 0.35 and move the camera closer to where birds land |

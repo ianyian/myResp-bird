@@ -14,7 +14,14 @@ sudo apt update
 sudo apt install -y --no-install-recommends \
   git alsa-utils python3-picamera2 python3-flask python3-yaml python3-numpy \
   python3-pil python3-gpiozero python3-pytest
+# DKMS rebuilds the AI HAT driver automatically after kernel updates.
+# Without it the AI HAT stops working after the next system upgrade + reboot.
+sudo apt install -y dkms linux-headers-rpi-2712 || sudo apt install -y dkms "linux-headers-$(uname -r)" || true
 sudo apt install -y hailo-all
+if lspci 2>/dev/null | grep -q Hailo && ! modinfo hailo_pci >/dev/null 2>&1; then
+  echo "    building the AI HAT driver for kernel $(uname -r)"
+  sudo apt install --reinstall -y hailort-pcie-driver
+fi
 if command -v pw-play >/dev/null 2>&1; then
   # Desktop version: PipeWire handles USB + Bluetooth audio. Keep the user's
   # audio session running from boot, even when nobody is logged in.
